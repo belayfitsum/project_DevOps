@@ -117,7 +117,7 @@ output "server_public_ip" {
 
 # create ec2 webserveand deploy an appache webserver
 
-resource "aws_instance" "web-server-insta" {
+resource "aws_instance" "web-server-insta" 
   ami= "ami-099da3ad959447ffa"
   instance_type ="t2.micro"
   availability_zone= "eu-central-1a"
