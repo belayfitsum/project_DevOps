@@ -1,71 +1,73 @@
-# This workflow executes several linters on changed files based on languages used in your code base whenever
-# you push a code or open a pull request.
-#
-# You can adjust the behavior by modifying this file.
-# For more information, see:
-# https://github.com/github/super-linter
-name: Lint Code Base
+name: Terraform CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+
 jobs:
-  run-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          # Full git history is needed to get a proper list of changed files within `super-linter`
-          fetch-depth: 0
-
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: "main"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-  build:
-    name: Build & Test
+  terraform:
+    name: 'Terraform Lint, Security Check, and Deploy'
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build TypeScript
-        run: npm tsc
-
-  deploy:
-    name: Deploy with Terraform
-    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: 'eu-central-1'
+      TF_VERSION: '1.4.0'
+      TFLINT_VERSION: '0.46.1'  # Updated to a more recent version
+      TFSEC_VERSION: '1.28.1'   # Updated to a more recent version
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: 'Checkout GitHub repository'
+      uses: actions/checkout@v2
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+    - name: 'Configure AWS credentials'
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-      - name: Initialize Terraform
-        run: terraform init
-        working-directory: terraform/
+    - name: 'Set up Terraform'
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Apply Terraform
-        run: terraform apply -auto-approve
-        working-directory: terraform/
-        env:
-          AWS_ACCESS_KEY_IDD: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: 'Install TFLint'
+      run: |
+        curl -sLo tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${{ env.TFLINT_VERSION }}/tflint_linux_amd64.zip
+        unzip tflint.zip -d /usr/local/bin/
+        tflint --version
+
+    - name: 'Install tfsec'
+      run: |
+        curl -sLo tfsec https://github.com/aquasecurity/tfsec/releases/download/v${{ env.TFSEC_VERSION }}/tfsec-linux-amd64
+        chmod +x tfsec
+        mv tfsec /usr/local/bin/
+        tfsec --version
+
+    - name: 'Terraform Init'
+      run: terraform init
+
+    - name: 'Terraform Format'
+      run: terraform fmt
+
+    - name: 'Terraform Validate'
+      run: terraform validate
+
+    - name: 'TFLint'
+      run: |
+        tflint --init
+        tflint
+
+    - name: 'tfsec'
+      run: tfsec .
+
+    - name: 'Terraform Plan'
+      run: terraform plan -out=tfplan
+
+    - name: 'Terraform Apply'
+      if: github.ref == 'refs/heads/main'
+      run: terraform apply -auto-approve tfplan
