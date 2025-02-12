@@ -46,7 +46,7 @@ jobs:
         run: npm install
 
       - name: Build TypeScript
-        run: npm test
+        run: npm tsc
 
   deploy:
     name: Deploy with Terraform
