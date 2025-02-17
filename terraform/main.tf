@@ -3,153 +3,80 @@ provider "aws" {
   region = "eu-central-1"
   profile = "default"
 }
-# With few steps , I am going to launch an EC2 instance from aws and host my external domain on aws
-#transffering domain to aws and dns setups might be done manually from aws console
-# create a vpc 
-# Create internet gateway
-# Create a route table
-# Create a subnet
-#
-#
 
-resource "aws_vpc" "famvpc" {
-  cidr_block = "10.0.0.0/16"
+# create a default vpc if not exists
+
+resource "aws_default_vpc" "default_vpc" {
   tags = {
-    Name="production"
+    Name="rds_vpc"
   }
 }
 
-# internet gatewy
+# create a data source to get all availability zones in a region
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.famvpc.id
+data "aws_availability_zones" "aws_availability_zones" {}
 
+# create a default subnet in first az if one not exists
+
+resource "aws_default_subnet" "subnet_az1"{
+  availability_zone = data.aws_availability_zones.aws_availability_zones.names[0]
 }
 
-# create a route table
+//create subnet in the second az
 
-resource "aws_route_table" "fam-route-table" {
-  vpc_id = aws_vpc.famvpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  route {
-    ipv6_cidr_block        = "::/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-}
-
-# create a subnet
-
-resource "aws_subnet" "subnet-fam" {
-  vpc_id     = aws_vpc.famvpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "eu-central-1a"
-
-  tags = {
-    Name = "prod_subnet"
-  }
-}
-# route table association - route table-subnet
-
-resource "aws_route_table_association" "a" {
-  subnet_id      = aws_subnet.subnet-fam.id
-  route_table_id = aws_route_table.fam-route-table.id
+resource "aws_default_subnet" "subnet_az2"{
+  availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
 }
   # create a security group
 
-  resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
-  vpc_id      = aws_vpc.famvpc.id
+  resource "aws_security_group" "database_sg" {
+  name        = "postgres security group"
+  description = "Allow postgresql access on port "
+  vpc_id      = aws_default_vpc.default_vpc.id
 
   ingress {
-    description      = "HTTPS"
-    from_port        = 443
-    to_port          = 443
+    description      = "postgres access"
+    from_port        = 5432
+    to_port          = 5432
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
    }
-   ingress {
-    description      = "HTTP"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-   }
-   ingress {
-    description      = "ssh"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-   }
-
+  
   egress {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+
   }
 
   tags = {
-    Name = "allow_tls"
+    Name = "postgres security group"
   }
 }
-# networ interfce
+ resource "aws_db_subnet_group" "database_subnet_group"{
+  name = "database-subnets"
+  subnet_ids = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
+  description = "subnet for db instance"
 
-resource "aws_network_interface" "webserver-nic" {
-  subnet_id       = aws_subnet.subnet-fam.id
-  private_ips     = ["10.0.1.55"]
-  security_groups = [aws_security_group.allow_tls.id]
-
+tags = {
+    Name = "database-subnets"
+  }
 }
 
-# assign public elastic ip
-
-resource "aws_eip" "one" {
-  vpc                       = true
-  network_interface         = aws_network_interface.webserver-nic.id
-  associate_with_private_ip = "10.0.1.55"
-  depends_on                = [aws_internet_gateway.gw]
-}
-
-output "server_public_ip" {
-     value = aws_eip.one.public_ip
-  }
-
-# create ec2 webserveand deploy an appache webserver
-
-resource "aws_instance" "web-server-insta" {
-  ami= "ami-099da3ad959447ffa"
-  instance_type ="t2.micro"
-  availability_zone= "eu-central-1a"
-  key_name= "webserver-key"
-
-
-  network_interface{
-    device_index= 0
-    network_interface_id = aws_network_interface.webserver-nic.id
-  }
-
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo apt update -y
-              sudo apt install -y postgresql postgresql-contrib nodejs npm
-              git clone https://github.com/myrepo/backend.git /home/ubuntu/backend
-              cd /home/ubuntu/backend
-              npm install
-              npm run build
-              npm start
-              EOF
-    tags = {
-      Name = "psql-server"
-   }
-
-  
+# create the rds instance
+resource "aws_db_instance" "db_instance" {
+  engine                  = "postgres"
+  engine_version          = "15"
+  multi_az                = false
+  identifier              = "postgres-api-testing"
+  username                = var.db_username
+  password                = var.db_password
+  instance_class          = var.db_instance_class
+  allocated_storage       = var.db_storage
+  db_subnet_group_name    = aws_db_subnet_group.database_subnet_group.id
+  vpc_security_group_ids  = [aws_security_group.database_sg.id]
+  availability_zone       = data.aws_availability_zones.aws_availability_zones.names[0]
+  db_name                 = var.db_name
+  skip_final_snapshot     = true
 }
