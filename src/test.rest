@@ -1,0 +1,21 @@
+###
+
+Get http://localhost:3000/log
+
+###
+POST http://localhost:3000/postData
+
+Content-Type: application/json
+
+{
+    "name": "Fitsum",
+    "email": "abcmail.com"
+}
+
+###
+
+GET  http://localhost:3000/setup
+{
+    "name": "logtest",
+    "status": "created"
+}
