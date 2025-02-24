@@ -6,12 +6,12 @@ variable "db_instance_class" {
 
 variable "db_name" {
   description = "Database name"
-  default     = "postgres_db"
+  default     = "log"
 }
 
 variable "db_username" {
   description = "username for PostgreSQL"
-  default     = "api_user"
+  default     = "postgres"
 }
 
 variable "db_password" {

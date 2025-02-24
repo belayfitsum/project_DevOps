@@ -1,5 +1,6 @@
 const { Client } =require('pg')
 const express = require('express')
+
 const app = express()
 
 app.use(express.json())
@@ -10,9 +11,9 @@ const port = process.env.PORT || 3000;
 
 const con = new Client({
     host: "localhost",
-    port: 5432,
+    port: "5432",
     user: "postgres",
-    password:"test12#",
+    password:'test12#',
     database:"log"
 
 })

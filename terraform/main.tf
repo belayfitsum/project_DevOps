@@ -22,12 +22,39 @@ resource "aws_default_subnet" "subnet_az1"{
   availability_zone = data.aws_availability_zones.aws_availability_zones.names[0]
 }
 
-//create subnet in the second az
+//create subnet in the second az. this actually created subnets in all three az's
 
 resource "aws_default_subnet" "subnet_az2"{
   availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
 }
-  # create a security group
+
+# Security Group for EC2
+resource "aws_security_group" "ec2_sg" {
+  vpc_id = aws_default_vpc.default_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # 2be changed later
+}
+ingress {
+    from_port   = 3000  
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Open for API access
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+}
+tags = {
+    Name = "EC2_API_SG"
+  }
+}
+  # security group for posrgres
 
   resource "aws_security_group" "database_sg" {
   name        = "postgres security group"
@@ -39,14 +66,14 @@ resource "aws_default_subnet" "subnet_az2"{
     from_port        = 5432
     to_port          = 5432
     protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    security_groups  = [aws_security_group.ec2_sg.id] # only allow ec2 to have access via port
    }
   
   egress {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    cidr_blocks      = ["0.0.0.0/0"] # this is unncessary
 
   }
 
@@ -79,4 +106,17 @@ resource "aws_db_instance" "db_instance" {
   availability_zone       = data.aws_availability_zones.aws_availability_zones.names[0]
   db_name                 = var.db_name
   skip_final_snapshot     = true
+}
+
+# Provision EC2 instance
+resource "aws_instance" "my_api_server" {
+  ami           = "ami-06ee6255945a96aba"  
+  instance_type = "t2.micro"
+  availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
+  key_name =  "postgres"
+  vpc_security_group_ids  = [aws_security_group.ec2_sg.id]
+
+  tags = {
+    Name = "My API Server"
+  }
 }

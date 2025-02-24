@@ -8,7 +8,7 @@ POST http://localhost:3000/postData
 Content-Type: application/json
 
 {
-    "name": "Fitsum",
+    "name": "Tes",
     "email": "abcmail.com"
 }
 

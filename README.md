@@ -53,3 +53,57 @@ CREATE DATABASE mydatabase;
 
 \c mydatabase
 
+
+Trigger	What Happens	Tool Used
+Push to GitHub (git push main)	API is automatically deployed to AWS	GitHub Actions
+New Database Request from API	Terraform provisions a new RDS instance	Terraform via API
+Code Changes in Terraform Repo	Infrastructure updates automatically	GitHub Actions / CI/CD
+CloudWatch / EventBridge Trigger	Auto-scale or update infrastructure	AWS EventBridge
+
+What yo achoeve with the automation
+✅ No manual deployment needed → Just push code to GitHub
+✅ Ensures API is always up-to-date on AWS EC2
+✅ Uses PM2 to keep the API running even after reboots > maybe other options than pm2
+
+Deployment
+
+1. AWS EC2 for API
+2. PostgreSQL for Database < this has been ready for a while>
+
+- Make sure EC2 can connect to RDS
+
+- test connection between RDS and EC2
+- Install dependencies on EC2 node.js etc
+
+Terraform
+
+Both EC2 and Postges RDS instance are provisioned from the same main.tf.Both are:
+- same VPC
+- Diffferent subnemt
+- Only EC2 chave inbound access to rds
+[to comply even more with AWS best security practices, change rds into private subnet]
+
+SSH
+
+SSH in to the new EC2 with the SSK KEY. Change permission to the file using 
+- chmod 400 KEY_NAME
+
+itsums-MacBook-Pro Downloads $ ssh -i postgres.pem ec2-user@18.199.169.29
+   ,     #_
+   ~\_  ####_        Amazon Linux 2023
+  ~~  \_#####\
+  ~~     \###|
+  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
+   ~~       V~' '->
+    ~~~         /
+      ~~._.   _/
+         _/ _/
+       _/m/'
+[ec2-user@ip-172-31-43-142 ~]$ 
+
+🔹CI/CD Pipeline Overview
+RDS and EC2 is deployed to AWS using terraform. Next is automated delivery usibf Githubs's CI/CD
+✅ Build the application (install dependencies).
+✅ Run Tests (optional but recommended).
+✅ Deploy the updated API code to your EC2 instance.
+✅ Restart the service to apply changes
