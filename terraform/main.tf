@@ -3,6 +3,17 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+//this holds the terraform state
+
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-tfstate12"
+    key            = "my-terraform-tfstate12/tfstate"
+    region         = "eu-central-1"
+    encrypt        = true
+  }
+}
+
 # create a default vpc if not exists
 
 resource "aws_default_vpc" "default_vpc" {
