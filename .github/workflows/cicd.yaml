@@ -31,7 +31,7 @@
 #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 #       run: terraform apply -auto-approve
 
-# below is another test
+# below is another test if all not working revert to it
 
 # name: Infra Deployment
 
