@@ -101,9 +101,44 @@ itsums-MacBook-Pro Downloads $ ssh -i postgres.pem ec2-user@18.199.169.29
        _/m/'
 [ec2-user@ip-172-31-43-142 ~]$ 
 
+Install dependencies once SSH like nodejs, pm2 to restart API automatically
+sudo dnf install nodejs -y
+ sudo npm install -g pm2
+
 🔹CI/CD Pipeline Overview
 RDS and EC2 is deployed to AWS using terraform. Next is automated delivery usibf Githubs's CI/CD
 ✅ Build the application (install dependencies).
 ✅ Run Tests (optional but recommended).
 ✅ Deploy the updated API code to your EC2 instance.
 ✅ Restart the service to apply changes
+
+NOTE:
+
+When running CICD pipline terraform created another EC2 instance.
+Fix this by using an S3 backend to store Terraform state:
+
+Added below in head of the main.tf file after creating the s3 bucket,
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"
+    key            = "infra/terraform.tfstate"
+    region         = "eu-central-1"
+    encrypt        = true
+  }
+}
+However run into pipline failure 
+Run terraform init
+/home/runner/work/_temp/d9f68749-b436-4e4a-8cf9-8c3167d576d8/terraform-bin init
+Initializing the backend...
+╷
+│ Error: No valid credential sources found
+│ 
+│ Please see https://www.terraform.io/docs/language/settings/backends/s3.html
+│ for more information about providing credentials.
+│ 
+│ Error: failed to refresh cached credentials, no EC2 IMDS role found,
+│ operation error ec2imds: GetMetadata, failed to get API token, operation
+│ error ec2imds: getToken, http response error StatusCode: 400, request to
+│ EC2 IMDS failed
+│ 
+

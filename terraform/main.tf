@@ -1,17 +1,23 @@
-# Provider block , the profile is the onely one key in my aws credentials folder
-provider "aws" {
-  region = "eu-central-1"
-}
-
-//this holds the terraform state
-
 terraform {
-  backend "s3" {
+ required_providers {
+   aws = {
+     source = "hashicorp/aws"
+   }
+ }
+ 
+backend "s3" {
     bucket         = "my-terraform-tfstate12"
     key            = "tfstate"
     region         = "eu-central-1"
     encrypt        = true
   }
+}
+ 
+
+# Provider block , the profile is the onely one key in my aws credentials folder
+provider "aws" {
+  region = "eu-central-1"
+  # profile ="default"
 }
 
 # create a default vpc if not exists
