@@ -1,34 +1,67 @@
-name: Infra + API Deployment
+# name: Infra + API Deployment
+
+# on:
+#   push:
+#     branches:
+#       - main  
+
+# jobs:
+#   terraform:
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: terraform
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v3
+
+#     - name: Install Terraform
+#       uses: hashicorp/setup-terraform@v2
+
+#     - name: Initialize Terraform
+#       run: terraform init
+
+#     - name: Validate Terraform
+#       run: terraform validate
+
+#     - name: Apply Terraform Changes
+#       env:
+#         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#       run: terraform apply -auto-approve
+
+name: Infra Deployment
 
 on:
   push:
     branches:
-      - main  
+      - main  # Runs on push to the main branch
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v2
+    # 🔹 Configure AWS Credentials using OIDC (Recommended)
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::977952712667:role/TerraformBackendrole # Replace with your IAM role
+        aws-region: eu-central-1
 
+    # 🔹 Initialize Terraform with S3 backend
     - name: Initialize Terraform
-      run: terraform init
+      run: terraform init -backend=true
 
+    # 🔹 Validate Terraform files
     - name: Validate Terraform
       run: terraform validate
 
+    # 🔹 Apply Terraform changes
     - name: Apply Terraform Changes
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform apply -auto-approve
 
   deploy:
