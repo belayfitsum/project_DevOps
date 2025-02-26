@@ -47,15 +47,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    #  Configure AWS Credentials using OIDC
-     - name: Configure AWS Credentials (OIDC)
+    - name: Configure AWS Credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: ${{ secrets.AWS_ROLE }}
         aws-region: ${{ env.AWS_REGION }}
         role-session-name: GitHub-OIDC-TERRAFORM
 
-        - name: Setup Terraform
+    - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.2.5
@@ -75,7 +74,6 @@ jobs:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
-
 
   deploy:
     runs-on: ubuntu-latest
