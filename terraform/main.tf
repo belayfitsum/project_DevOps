@@ -7,7 +7,7 @@ terraform {
 
   backend "s3" {
     bucket  = "my-terraform-tfstate12"
-    key     = "tf/tfstate"
+    key     = "infra.tfstate"
     region  = "eu-central-1"
     encrypt = true
   }
