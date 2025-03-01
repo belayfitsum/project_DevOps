@@ -1,7 +1,7 @@
-# project_DevOps
+# project
 
-Building a backend with Javascript and PostgreSQL
-and build Node.js API endpoint using Node.js  for users to be able to make CRUD operations into the database mainly using PUT and GET
+To Create a backend using Javascript and a PostgreSQL database with one table named “log”, including building Node.js API endpoints to enable users to perform CRUD operations on the database, primarily utilizing PUT and GET requests. In addition a CI/CD pipeline using GitHub actions/Gitlab to run test and deploy the backend using infrastructure as code in any environment.
+
 Node.js- Server-Side Development: Node.js is commonly used for building server-side applications, including:
     -  Web servers (like those built with Express.js).   
     - APIs (that provide data to web and mobile apps).   
@@ -15,15 +15,11 @@ For managing different methods GET, DELETE , PUT etc we need a route handler- AP
 
 Middleware- Code which runs on the server between getting a request and sending a response  use()
 
-Dependencies:
+# Dependencies:
 
-Express and pg for postgress
+- Express and pg for postgress
 
-Rest Client
-
-Install rest client extension from visual studio code for testing API's within the code instead of Postman.
-
-PGAdmin vs Psql
+- PGAdmin vs Psql
 
 pgAdmin is a graphical user interface (GUI) tool for managing and interacting with PostgreSQL databases. It provides an alternative to using psql (the command-line tool), making it easier to view, create, modify, and manage databases visually. 
 
@@ -53,6 +49,15 @@ CREATE DATABASE mydatabase;
 
 \c mydatabase
 
+6. Start the API
+nodemon db/ node db.api
+
+- Rest Client
+
+Installed rest client extension from visual studio code for testing API's within the code instead of Postman.
+
+# Nodemon 
+Nodemon is a development tool that automatically restarts a Node.js application when file changes in the directory are detected. It helps developers by eliminating the need to manually restart the server after making code changes.
 
 Trigger	What Happens	Tool Used
 Push to GitHub (git push main)	API is automatically deployed to AWS	GitHub Actions
@@ -60,10 +65,10 @@ New Database Request from API	Terraform provisions a new RDS instance	Terraform 
 Code Changes in Terraform Repo	Infrastructure updates automatically	GitHub Actions / CI/CD
 CloudWatch / EventBridge Trigger	Auto-scale or update infrastructure	AWS EventBridge
 
-What yo achoeve with the automation
+What yo achieve with the automation
 ✅ No manual deployment needed → Just push code to GitHub
 ✅ Ensures API is always up-to-date on AWS EC2
-✅ Uses PM2 to keep the API running even after reboots > maybe other options than pm2
+✅ Uses PM2 to keep the API running even after reboots > maybe other options than pm2?
 
 Deployment
 
@@ -75,7 +80,7 @@ Deployment
 - test connection between RDS and EC2
 - Install dependencies on EC2 node.js etc
 
-Terraform
+# Terraform
 
 Both EC2 and Postges RDS instance are provisioned from the same main.tf.Both are:
 - same VPC
@@ -83,7 +88,7 @@ Both EC2 and Postges RDS instance are provisioned from the same main.tf.Both are
 - Only EC2 chave inbound access to rds
 [to comply even more with AWS best security practices, change rds into private subnet]
 
-SSH
+# SSH
 
 SSH in to the new EC2 with the SSK KEY. Change permission to the file using 
 - chmod 400 KEY_NAME
@@ -102,8 +107,8 @@ itsums-MacBook-Pro Downloads $ ssh -i postgres.pem ec2-user@18.199.169.29
 [ec2-user@ip-172-31-43-142 ~]$ 
 
 Install dependencies once SSH like nodejs, pm2 to restart API automatically
-sudo dnf install nodejs -y
- sudo npm install -g pm2
+# sudo dnf install nodejs -y
+# sudo npm install -g pm2
 
 🔹CI/CD Pipeline Overview
 RDS and EC2 is deployed to AWS using terraform. Next is automated delivery usibf Githubs's CI/CD
@@ -142,3 +147,21 @@ Initializing the backend...
 │ EC2 IMDS failed
 │ 
 
+NOTE:
+
+my ec2 ssh public key is added to github SSH to be able to clone it.
+Steps
+- generate ssh from the ec2 and add it to Github <<<detai steps later>>>
+ssh-keygen -t rsa
+it's only after adding pub key to github that it has privillages to ssh into ec2 using the github actions
+But what is the point of pm2 restarting the API ? shouldn't the CICD handle that?
+
+- OpenIdConnect(OICD)
+
+github actions used a role designated from AWS IDP to deploy resources on aws cloud. 
+OpenID Connect (OIDC) allows your GitHub Actions workflows to access resources in Amazon Web Services (AWS), without needing to store the AWS credentials as long-lived GitHub secrets. https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+
+THe cicd action will definately fail on many occurences. Mainly the Github actions having no privillages on deploying some resources. The only way is to add the specific policy from AWS to the github role. 
+
+S3
+s3 backend for terraform must be created before hand or within the terraform initialization. 
