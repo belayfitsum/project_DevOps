@@ -1,6 +1,7 @@
 const { Client } =require('pg')
 const express = require('express')
-
+const dotenv = require('dotenv') 
+dotenv.config()
 const app = express()
 
 app.use(express.json())
@@ -10,11 +11,11 @@ app.use(express.json())
 const port = process.env.PORT || 3000;
 
 const con = new Client({
-    host: "localhost",
-    port: "5432",
-    user: "postgres",
-    password:'test12#',
-    database:"log"
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 
 })
 //module.exports = pool

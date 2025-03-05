@@ -8,8 +8,8 @@ POST http://localhost:3000/postData
 Content-Type: application/json
 
 {
-    "name": "Tes",
-    "email": "abcmail.com"
+   "name":"test",
+   "email":"abushcom"
 }
 
 ###
