@@ -1,6 +1,6 @@
 # project
 
-To Create a backend using Javascript and a PostgreSQL database with one table named “log”, including building Node.js API endpoints to enable users to perform CRUD operations on the database, primarily utilizing PUT and GET requests. In addition a CI/CD pipeline using GitHub actions/Gitlab to run test and deploy the backend using infrastructure as code in any environment.
+To Create a backend using Javascript and a PostgreSQL database with one table named “log”, including building Node.js API endpoints to enable users to perform CRUD operations on the database, primarily utilizing PUT and GET requests. In addition a CI/CD pipeline using GitHub actions/Gitlab to run test and deploy the backend using infrastructure as code in AWS
 
 Node.js- Server-Side Development: Node.js is commonly used for building server-side applications, including:
     -  Web servers (like those built with Express.js).   
@@ -157,3 +157,37 @@ OpenID Connect (OIDC) allows your GitHub Actions workflows to access resources i
 
 S3
 s3 backend for terraform must be created before hand or within the terraform initialization. 
+
+Testing te API:
+
+Option 1
+
+1. Add Rest client extension from VS code and test it locally in format below
+
+###
+POST http://localhost:3000/postData
+
+Content-Type: application/json
+
+{
+   "name":"xxx",
+   "email":"xxx.com"
+}
+
+- You can also check from PGAdmin desktop client if the entry is added to the database or from the from localhost or API node respectively below.
+<psql -h localhost -U postgres -d log -W>
+<psql -h <PostgreSQL endpoint> -U postgres -d log -W>
+
+When endpoint is hit, the action should be reflected in the databse. Since I have firewall openings open from API node to RDS instance I can check the entry from AWS EC2 node with above command
+
+Improvemnets:
+
+Add a GET endpoint - to fetch all the data!! in progress
+
+
+Option 2.
+
+- Open postman and enter the URL as defined in the endpoint section of the application. Use method POST
+
+POST http://localhost:3000/postData
+

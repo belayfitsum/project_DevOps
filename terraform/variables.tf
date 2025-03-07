@@ -11,12 +11,14 @@ variable "db_name" {
 
 variable "db_username" {
   description = "username for PostgreSQL"
+  type        = string
   default     = "postgres"
 }
 
 variable "db_password" {
   description = "password for PostgreSQL"
-  default     = "test12#!"
+  type        = string
+  sensitive     = true
 }
 
 variable "db_storage" {
