@@ -14,7 +14,10 @@ terraform {
 }
 
 
-# Provider block , the profile is the onely one key in my aws credentials folder
+# Provider block , the profile is the onely one key in my aws credentials folder.
+# However it's commented out below because I use s3 as storage to hold the terraform state
+# as shown above this provision will create infra.tfstate under the main bucket[my-terraform-tfstate12]
+# the main bucket need to be present before applying terrafom apply. It can be created here as well- haven't tried it
 provider "aws" {
   region = "eu-central-1"
   # profile ="default"

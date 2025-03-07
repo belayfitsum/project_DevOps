@@ -65,7 +65,7 @@ New Database Request from API	Terraform provisions a new RDS instance	Terraform 
 Code Changes in Terraform Repo	Infrastructure updates automatically	GitHub Actions / CI/CD
 CloudWatch / EventBridge Trigger	Auto-scale or update infrastructure	AWS EventBridge
 
-What yo achieve with the automation
+What to achieve with the automation
 ✅ No manual deployment needed → Just push code to GitHub
 ✅ Ensures API is always up-to-date on AWS EC2
 ✅ Uses PM2 to keep the API running even after reboots > maybe other options than pm2?
@@ -73,7 +73,7 @@ What yo achieve with the automation
 Deployment
 
 1. AWS EC2 for API
-2. PostgreSQL for Database < this has been ready for a while>
+2. PostgreSQL for Database 
 
 - Make sure EC2 can connect to RDS
 
@@ -84,7 +84,7 @@ Deployment
 
 Both EC2 and Postges RDS instance are provisioned from the same main.tf.Both are:
 - same VPC
-- Diffferent subnemt
+- Diffferent subnent
 - Only EC2 chave inbound access to rds
 [to comply even more with AWS best security practices, change rds into private subnet]
 
@@ -93,25 +93,15 @@ Both EC2 and Postges RDS instance are provisioned from the same main.tf.Both are
 SSH in to the new EC2 with the SSK KEY. Change permission to the file using 
 - chmod 400 KEY_NAME
 
-itsums-MacBook-Pro Downloads $ ssh -i postgres.pem ec2-user@18.199.169.29
-   ,     #_
-   ~\_  ####_        Amazon Linux 2023
-  ~~  \_#####\
-  ~~     \###|
-  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
-   ~~       V~' '->
-    ~~~         /
-      ~~._.   _/
-         _/ _/
-       _/m/'
-[ec2-user@ip-172-31-43-142 ~]$ 
+ $ ssh -i postgres.pem ec2-user@IP
+
 
 Install dependencies once SSH like nodejs, pm2 to restart API automatically
 # sudo dnf install nodejs -y
 # sudo npm install -g pm2
 
 🔹CI/CD Pipeline Overview
-RDS and EC2 is deployed to AWS using terraform. Next is automated delivery usibf Githubs's CI/CD
+RDS and EC2 is deployed to AWS using terraform. Next is automated delivery using Githubs's CI/CD
 ✅ Build the application (install dependencies).
 ✅ Run Tests (optional but recommended).
 ✅ Deploy the updated API code to your EC2 instance.
@@ -119,7 +109,7 @@ RDS and EC2 is deployed to AWS using terraform. Next is automated delivery usibf
 
 NOTE:
 
-When running CICD pipline terraform created another EC2 instance.
+When running CICD pipline terraform created another EC2 instance.The existing instance was created from default profile and the state was locally saved.
 Fix this by using an S3 backend to store Terraform state:
 
 Added below in head of the main.tf file after creating the s3 bucket,
@@ -146,22 +136,24 @@ Initializing the backend...
 │ error ec2imds: getToken, http response error StatusCode: 400, request to
 │ EC2 IMDS failed
 │ 
+Solution: 
+Read the failure throughly. Failures mainly happen due to the Github role in AWS having no privillages on deploying some resources. The only way is to add the specific policy from AWS to the github role.
 
 NOTE:
 
-my ec2 ssh public key is added to github SSH to be able to clone it.
+my ec2 ssh public key is added to github to be able to clone it.
 Steps
 - generate ssh from the ec2 and add it to Github <<<detai steps later>>>
-ssh-keygen -t rsa
-it's only after adding pub key to github that it has privillages to ssh into ec2 using the github actions
+|ssh-keygen -t rsa > copy the public key > 
+|github >settings >SSH and GPG keys > paste the public key
+
+It's only after adding pub key to github that it has privillages to ssh into ec2 using the github actions < concepts of passwordless SSH>
 But what is the point of pm2 restarting the API ? shouldn't the CICD handle that?
 
 - OpenIdConnect(OICD)
 
 github actions used a role designated from AWS IDP to deploy resources on aws cloud. 
 OpenID Connect (OIDC) allows your GitHub Actions workflows to access resources in Amazon Web Services (AWS), without needing to store the AWS credentials as long-lived GitHub secrets. https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
-
-THe cicd action will definately fail on many occurences. Mainly the Github actions having no privillages on deploying some resources. The only way is to add the specific policy from AWS to the github role. 
 
 S3
 s3 backend for terraform must be created before hand or within the terraform initialization. 
