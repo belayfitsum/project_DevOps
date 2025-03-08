@@ -42,9 +42,10 @@ resource "aws_default_subnet" "subnet_az1" {
 }
 
 //create subnet in the second az. this actually created subnets in all three az's
-
+//depends on makes sure the vpc exists. I had an error ro create subnets cause there was no vpc in az2
 resource "aws_default_subnet" "subnet_az2" {
   availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
+  depends_on        =[aws_default_vpc.default_vpc]
 }
 
 # Security Group for EC2
