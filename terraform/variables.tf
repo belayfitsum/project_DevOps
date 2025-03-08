@@ -17,8 +17,7 @@ variable "db_username" {
 
 variable "db_password" {
   description = "password for PostgreSQL"
-  type        = string
-  sensitive     = true
+  default     = "test12#!"
 }
 
 variable "db_storage" {
