@@ -2,7 +2,8 @@
 
 To Create a backend using Javascript and a PostgreSQL database with one table named “log”, including building Node.js API endpoints to enable users to perform CRUD operations on the database, primarily utilizing PUT and GET requests. In addition a CI/CD pipeline using GitHub actions/Gitlab to run test and deploy the backend using infrastructure as code in AWS
 
-Node.js- Server-Side Development: Node.js is commonly used for building server-side applications, including:
+Node.js:
+- Server-Side Development: Node.js is commonly used for building server-side applications, including:
     -  Web servers (like those built with Express.js).   
     - APIs (that provide data to web and mobile apps).   
     - Backend services.    
