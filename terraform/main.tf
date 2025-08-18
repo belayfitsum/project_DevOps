@@ -48,6 +48,32 @@ resource "aws_default_subnet" "subnet_az2" {
   depends_on        =[aws_default_vpc.default_vpc]
 }
 
+// Eks cluster
+
+
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 19.0"
+
+  cluster_name    = "my-rds-eks"
+  cluster_version = "1.27"
+
+  cluster_endpoint_public_access = true
+
+  vpc_id                   = aws_default_vpc.default_vpc.id
+  subnet_ids               = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
+  control_plane_subnet_ids = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
+
+  eks_managed_node_groups = {
+    green = {
+      min_size       = 1
+      max_size       = 1
+      desired_size   = 1
+      instance_types = ["t3.medium"]
+    }
+  }
+}
+
 # Security Group for EC2
 resource "aws_security_group" "ec2_sg" {
   vpc_id = aws_default_vpc.default_vpc.id

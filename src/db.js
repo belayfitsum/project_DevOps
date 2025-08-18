@@ -1,14 +1,12 @@
-const { Client } =require('pg')
-const express = require('express')
-const dotenv = require('dotenv') 
-dotenv.config()
-const app = express()
+const { Client } = require('pg');
+const dotenv = require('dotenv');
+dotenv.config();
 
-app.use(express.json())
+// app.use(express.json())
 
 //define a route that listens to requests by making this app a server to get to listen to connections
 
-const port = process.env.PORT || 3000;
+// const port = process.env.PORT || 3000;
 
 const con = new Client({
     host: process.env.DB_HOST,
@@ -18,7 +16,6 @@ const con = new Client({
     database: process.env.DB_NAME
 
 })
-//module.exports = pool
 
 con.connect().then(()=> console.log("connected"))
 
@@ -34,22 +31,23 @@ con.query(`
 
   //route to insert new log into the log table
 
-  app.post('/postData', async (req, res) => {
-    const { name, email } = req.body;
-    if (!name || !email) return res.status(400).send('name and email is required.');
+  // app.post('/postData', async (req, res) => {
+  //   const { name, email } = req.body;
+  //   if (!name || !email) return res.status(400).send('name and email is required.');
   
-    try {
-      const result = await con.query(
-        'INSERT INTO log_table (name, email) VALUES ($1, $2) RETURNING *', 
-        [name, email]
-      );
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      result.status(500).send('Error inserting table.');
-    }
-  });
+  //   try {
+  //     const result = await con.query(
+  //       'INSERT INTO log_table (name, email) VALUES ($1, $2) RETURNING *', 
+  //       [name, email]
+  //     );
+  //     res.status(201).json(result.rows[0]);
+  //   } catch (error) {
+  //     result.status(500).send('Error inserting table.');
+  //   }
+  // });
 
 
-  app.listen(port, () => {
-    console.log(`app is listening on PORT ${port}`);
-});
+  // app.listen(port, () => {
+  //   console.log(`app is listening on PORT ${port}`);
+// });
+module.exports = con;
