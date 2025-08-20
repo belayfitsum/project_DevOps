@@ -14,10 +14,12 @@ terraform {
 }
 
 
-# Provider block , the profile is the onely one key in my aws credentials folder.
+# Provider block , the profile is the onely one key in my aws credentials folder. AWS vault should be 
+# used for a better security,on my to do list. IAM credentials saved in config files is dangerous to allow applications use to authenticate against aws resources.
 # However it's commented out below because I use s3 as storage to hold the terraform state
 # as shown above this provision will create infra.tfstate under the main bucket[my-terraform-tfstate12]
 # the main bucket need to be present before applying terrafom apply. It can be created here as well- haven't tried it
+# after using aws-vault as secret manager, terraform plan stoped working hmmm
 provider "aws" {
   region = "eu-central-1"
   # profile ="default"
@@ -45,7 +47,7 @@ resource "aws_default_subnet" "subnet_az1" {
 //depends on makes sure the vpc exists. I had an error ro create subnets cause there was no vpc in az2
 resource "aws_default_subnet" "subnet_az2" {
   availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
-  depends_on        =[aws_default_vpc.default_vpc]
+  depends_on        = [aws_default_vpc.default_vpc]
 }
 
 // Eks cluster
