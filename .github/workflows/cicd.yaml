@@ -36,10 +36,10 @@
 name: Infra Deployment
 
 # uncomment these four lines when start working. Now I don't want pipeline to deploy resources so want it basically to fail.
-on:
-  push:
-    branches:
-      - main  # Runs on push to the main branch
+# on:
+#   push:
+#     branches:
+#       - main  # Runs on push to the main branch
 
 permissions:
       id-token: write # This is required for aws oidc connection
