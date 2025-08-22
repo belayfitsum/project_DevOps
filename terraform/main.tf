@@ -5,6 +5,10 @@ terraform {
     }
   }
 
+  ###########################################################################################
+  # Backend block, bucket is manually created. The key variable will create a new directory #
+  ###########################################################################################
+
   backend "s3" {
     bucket  = "my-terraform-tfstate12"
     key     = "infra.tfstate"
@@ -14,12 +18,10 @@ terraform {
 }
 
 
-# Provider block , the profile is the onely one key in my aws credentials folder. AWS vault should be 
-# used for a better security,on my to do list. IAM credentials saved in config files is dangerous to allow applications use to authenticate against aws resources.
-# However it's commented out below because I use s3 as storage to hold the terraform state
-# as shown above this provision will create infra.tfstate under the main bucket[my-terraform-tfstate12]
-# the main bucket need to be present before applying terrafom apply. It can be created here as well- haven't tried it
-# after using aws-vault as secret manager, terraform plan stoped working hmmm
+##########################################################################################
+# Provider block , authenticating through the only default profile in credentials folder #
+##########################################################################################
+
 provider "aws" {
   region = "eu-central-1"
   # profile ="default"
