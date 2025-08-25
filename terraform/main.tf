@@ -25,6 +25,15 @@ terraform {
 
 provider "aws" {
   region = "eu-central-1"
+  default_tags {
+    tags = {
+      Environment = terraform.workspace
+      Project = var.project
+      contact = var.contact
+      ManageBy = "Terraform/setup"
+    }
+    
+  }
   # profile ="default"
 }
 
