@@ -14,6 +14,7 @@ terraform {
     key     = "infra.tfstate"
     region  = "eu-central-1"
     encrypt = true
+    dynamodb_table = "express-postgres-api-tf-lock"
   }
 }
 
