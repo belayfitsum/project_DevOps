@@ -60,12 +60,14 @@ Installed rest client extension from visual studio code for testing API's within
 # Nodemon 
 Nodemon is a development tool that automatically restarts a Node.js application when file changes in the directory are detected. It helps developers by eliminating the need to manually restart the server after making code changes.
 
-Trigger	What Happens	Tool Used
-Push to GitHub (git push main)	API is automatically deployed to AWS	GitHub Actions
-New Database Request from API	Terraform provisions a new RDS instance	Terraform via API
-Code Changes in Terraform Repo	Infrastructure updates automatically	GitHub Actions / CI/CD
-CloudWatch / EventBridge Trigger	Auto-scale or update infrastructure	AWS EventBridge
-
+|           Trigger               |	        What Happens               |Tool Used           |
+|------------------------------ |--------------------------------------|--------------------|
+| Push to GitHub (git push main)  |API is automatically deployed to AWS|GitHub Actions      |
+| New Database Request            |new RDS instance                    |                                    |
+| Code Changes in Terraform Repo  |Infrastructure update automatically |GitHub Actions                          |                                    |
+| CloudWatch / EventBridge        | Auto-scale or update               |AWS EventBridge                                   |
+|                                 |                                    |
+	
 What to achieve with the automation
 ✅ No manual deployment needed → Just push code to GitHub
 ✅ Ensures API is always up-to-date on AWS EC2
