@@ -48,6 +48,9 @@ permissions:
 env:
   TF_LOG: INFO
   AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ROLE: ${{ secrets.AWS_ROLE }}
+  AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+  AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
 
 jobs:
   terraform:
@@ -62,8 +65,8 @@ jobs:
     - name: Configure AWS Credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: ${{ secrets.AWS_ROLE }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: ${{ env.AWS_ROLE }}
+        aws-region: ${{ env.AWS_REGION }}
         role-session-name: GitHub-OIDC-TERRAFORM
 
     - name: Setup Terraform
@@ -73,8 +76,8 @@ jobs:
 
     - name: Terraform Init
       env:
-        AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
-        AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
+        AWS_BUCKET_NAME: ${{ env.AWS_BUCKET_NAME }}
+        AWS_BUCKET_KEY_NAME: ${{ env.AWS_BUCKET_KEY_NAME }}
       run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
     - name: Terraform Validate

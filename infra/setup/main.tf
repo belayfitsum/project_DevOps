@@ -1,96 +1,78 @@
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-
-  ###########################################################################################
-  # Backend block, bucket is manually created. The key variable will create a new directory #
-  ###########################################################################################
-
-  backend "s3" {
-    bucket  = "my-terraform-tfstate12"
-    key     = "infra.tfstate"
-    region  = "eu-central-1"
-    encrypt = true
-    dynamodb_table = "express-postgres-api-tf-lock"
-  }
-}
-
-
-##########################################################################################
-# Provider block , authenticating through the only default profile in credentials folder #
-##########################################################################################
-
-provider "aws" {
-  region = "eu-central-1"
-  default_tags {
-    tags = {
-      Environment = terraform.workspace
-      Project = var.project
-      contact = var.contact
-      ManageBy = "Terraform/setup"
-    }
-    
-  }
-  # profile ="default"
-}
 
 # create a default vpc if not exists
 
-resource "aws_default_vpc" "default_vpc" {
+data "aws_availability_zones" "aws_availability_zones" {}
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.1.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
   tags = {
     Name = "rds_vpc"
   }
 }
 
-# create a data source to get all availability zones in a region
+# Public subnet
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.my_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.aws_availability_zones.names[0]
+  map_public_ip_on_launch = true
 
-data "aws_availability_zones" "aws_availability_zones" {}
-
-# create a default subnet in first az if one not exists
-
-resource "aws_default_subnet" "subnet_az1" {
-  availability_zone = data.aws_availability_zones.aws_availability_zones.names[0]
-}
-
-//create subnet in the second az. this actually created subnets in all three az's
-//depends on makes sure the vpc exists. I had an error ro create subnets cause there was no vpc in az2
-resource "aws_default_subnet" "subnet_az2" {
-  availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
-  depends_on        = [aws_default_vpc.default_vpc]
-}
-
-// Eks cluster
-
-
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
-
-  cluster_name    = "my-rds-eks"
-  cluster_version = "1.27"
-
-  cluster_endpoint_public_access = true
-
-  vpc_id                   = aws_default_vpc.default_vpc.id
-  subnet_ids               = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
-  control_plane_subnet_ids = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
-
-  eks_managed_node_groups = {
-    green = {
-      min_size       = 1
-      max_size       = 1
-      desired_size   = 1
-      instance_types = ["t3.medium"]
-    }
+  tags = {
+    Name = "public-subnet"
   }
 }
 
-# Security Group for EC2
+# Private subnet for az1
+resource "aws_subnet" "private_subnet_a" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.aws_availability_zones.names[0]
+
+  tags = {
+    Name = "private-subnet-a"
+  }
+}
+
+# Private subnet for az2
+resource "aws_subnet" "private_subnet_b" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = data.aws_availability_zones.aws_availability_zones.names[1]
+
+  tags = {
+    Name = "private-subnet-b"
+  }
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "igw"
+  }
+}
+
+# Route table for public subnet
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Security Group for EC2- API server
 resource "aws_security_group" "ec2_sg" {
-  vpc_id = aws_default_vpc.default_vpc.id
+  vpc_id = aws_vpc.my_vpc.id
 
   ingress {
     from_port   = 22
@@ -111,15 +93,15 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name = "EC2_API_SG"
+    Name = "ec2-sg"
   }
 }
 # security group for posrgres
 
 resource "aws_security_group" "database_sg" {
   name        = "postgres security group"
-  description = "Allow postgresql access on port "
-  vpc_id      = aws_default_vpc.default_vpc.id
+  description = "Allow postgresql access from API server-ec2 "
+  vpc_id      = aws_vpc.my_vpc.id
 
   ingress {
     description     = "postgres access"
@@ -128,22 +110,16 @@ resource "aws_security_group" "database_sg" {
     protocol        = "tcp"
     security_groups = [aws_security_group.ec2_sg.id] # only allow ec2 to have access via port
   }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] # this is unncessary
-
-  }
-
   tags = {
-    Name = "postgres security group"
+    Name = "postgres-sg"
   }
 }
 resource "aws_db_subnet_group" "database_subnet_group" {
   name        = "database-subnets"
-  subnet_ids  = [aws_default_subnet.subnet_az1.id, aws_default_subnet.subnet_az2.id]
+  subnet_ids  = [
+    aws_subnet.private_subnet_a.id,
+    aws_subnet.private_subnet_b.id
+    ]
   description = "subnet for db instance"
 
   tags = {
@@ -155,7 +131,6 @@ resource "aws_db_subnet_group" "database_subnet_group" {
 resource "aws_db_instance" "db_instance" {
   engine                 = "postgres"
   engine_version         = "15"
-  multi_az               = false
   identifier             = "postgres-api-testing"
   username               = var.db_username
   password               = var.db_password
@@ -163,16 +138,16 @@ resource "aws_db_instance" "db_instance" {
   allocated_storage      = var.db_storage
   db_subnet_group_name   = aws_db_subnet_group.database_subnet_group.id
   vpc_security_group_ids = [aws_security_group.database_sg.id]
-  availability_zone      = data.aws_availability_zones.aws_availability_zones.names[0]
   db_name                = var.db_name
   skip_final_snapshot    = true
+  multi_az = true
 }
 
 # Provision EC2 instance
 resource "aws_instance" "my_api_server" {
   ami                    = "ami-06ee6255945a96aba"
   instance_type          = "t2.micro"
-  availability_zone      = data.aws_availability_zones.aws_availability_zones.names[1]
+  availability_zone      = data.aws_availability_zones.aws_availability_zones.names[0]
   key_name               = "postgres"
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 

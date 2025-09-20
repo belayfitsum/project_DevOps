@@ -8,5 +8,9 @@ terraform/terraform.tfstate.backup
 terraform/terraform.tfvars
 terraform/.terraform.lock.hcl
 
-infra/main.tf
-infra/variables.tf
+infra/setup/terraform.tfstate
+infra/setup/.terraform
+infra/setup/terraform.tfstate.backup
+infra/setup/terraform.tfvars
+infra/setup/.terraform.lock.hcl
+
