@@ -58,10 +58,17 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./terraform
+        working-directory: ./infra
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
+
+    - name: Debug OIDC token
+      run: |
+        TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+        "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | jq -r '.value')
+        echo "$TOKEN" | cut -d "." -f2 | base64 -d | jq
+
 
     - name: Configure AWS Credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v1
