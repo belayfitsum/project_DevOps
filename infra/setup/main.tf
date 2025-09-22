@@ -147,8 +147,8 @@ resource "aws_db_instance" "db_instance" {
 resource "aws_instance" "my_api_server" {
   ami                    = "ami-06ee6255945a96aba"
   instance_type          = "t2.micro"
-  availability_zone      = data.aws_availability_zones.aws_availability_zones.names[0]
   key_name               = "postgres"
+  subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
