@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
-       version = ">= 5.0"
+      source  = "hashicorp/aws"
+      version = ">= 5.0"
     }
   }
 
@@ -11,10 +11,10 @@ terraform {
   ###########################################################################################
 
   backend "s3" {
-    bucket  = "my-terraform-tfstate12"
-    key     = "infra.tfstate"
-    region  = "eu-central-1"
-    encrypt = true
+    bucket         = "my-terraform-tfstate12"
+    key            = "infra.tfstate"
+    region         = "eu-central-1"
+    encrypt        = true
     dynamodb_table = "express-postgres-api-tf-lock"
   }
 }
@@ -29,11 +29,11 @@ provider "aws" {
   default_tags {
     tags = {
       Environment = terraform.workspace
-      Project = var.project
-      contact = var.contact
-      ManageBy = "Terraform/setup"
+      Project     = var.project
+      contact     = var.contact
+      ManageBy    = "Terraform/setup"
     }
-    
+
   }
   # profile ="default"
 }

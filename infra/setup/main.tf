@@ -4,7 +4,7 @@
 data "aws_availability_zones" "aws_availability_zones" {}
 
 resource "aws_vpc" "my_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
@@ -115,11 +115,11 @@ resource "aws_security_group" "database_sg" {
   }
 }
 resource "aws_db_subnet_group" "database_subnet_group" {
-  name        = "database-subnets"
-  subnet_ids  = [
+  name = "database-subnets"
+  subnet_ids = [
     aws_subnet.private_subnet_a.id,
     aws_subnet.private_subnet_b.id
-    ]
+  ]
   description = "subnet for db instance"
 
   tags = {
@@ -140,7 +140,7 @@ resource "aws_db_instance" "db_instance" {
   vpc_security_group_ids = [aws_security_group.database_sg.id]
   db_name                = var.db_name
   skip_final_snapshot    = true
-  multi_az = true
+  multi_az               = true
 }
 
 # Provision EC2 instance

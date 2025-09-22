@@ -27,24 +27,24 @@ variable "db_storage" {
 
 variable "tf_state_bucket" {
   description = "Name of the s3 bucket in AWS for storing state"
-  default     = "my-terraform-tfstate12" 
-  
+  default     = "my-terraform-tfstate12"
+
 }
 
 variable "tf_state_lock_table" {
   description = "Name of DynamoDb table for state locking"
-  default     = "express-postgres-api-tf-lock" 
-  
+  default     = "express-postgres-api-tf-lock"
+
 }
 
 variable "project" {
   description = "Project name for tagging resources"
-  default     = "recipi-app-api"  
-  
+  default     = "recipi-app-api"
+
 }
 
 variable "contact" {
   description = "contact for tagging resources"
-  default     = "fitsum@example.com"  
-  
+  default     = "fitsum@example.com"
+
 }
