@@ -80,7 +80,7 @@ jobs:
 
       - name: Deploy API to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << EOF
+          ssh -o StrictHostKeyChecking=no "ubuntu@${{ secrets.EC2_PUBLIC_IP }}" << 'EOF'
      
           # Update the server
           sudo yum update -y || sudo apt-get update -y
