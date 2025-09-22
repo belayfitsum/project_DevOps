@@ -59,6 +59,11 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -no-color
 
+    - name: Get EC2 public IP
+      id: tf-output
+      working-directory: ./infra/setup
+      run: echo "::set-output name=ec2_ip::$(terraform output -raw ec2_public_ip)"
+
     - name: Terraform Apply
       # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
@@ -74,11 +79,6 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-
-      - name: Get EC2 public IP
-        id: tf-output
-        working-directory: ./infra/setup
-        run: echo "::set-output name=ec2_ip::$(terraform output -raw ec2_public_ip)"
 
       - name: Deploy API to EC2
         run: |
