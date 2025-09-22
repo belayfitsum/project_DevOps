@@ -1,6 +1,6 @@
 output "rds_endpoint" {
   description = "postgress endpoint"
-  value       = aws.db_instance.db_instance.endpoint
+  value       = aws_db_instance.db_instance.endpoint
 }
 
 # EC2 public IP (for SSH or API testing)
