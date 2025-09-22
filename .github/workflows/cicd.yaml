@@ -77,6 +77,23 @@ jobs:
 
       - name: Deploy API to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }}
-            # Ensure updates and deps
-            sudo yum update -y || sudo apt-get update -y; cd /home/ubuntu/myapp; git pull; npm install; pm2 restart all"
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << EOF
+     
+          # Update the server
+          sudo yum update -y || sudo apt-get update -y
+
+          # Pull latest code if using Git, optional if using pipeline artifact
+            git init
+            git remote add origin https://github.com/belayfitsum/project_DevOps.git
+            git fetch
+            git reset --hard origin/main
+
+          # Install Node.js dependencies
+            npm install
+
+          # Restart app with PM2 (install pm2 if not installed)
+            if ! command -v pm2 > /dev/null; then
+              sudo npm install -g pm2
+            fi
+            pm2 restart all || pm2 start index.js --name "myapp"
+          EOF
