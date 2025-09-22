@@ -59,14 +59,13 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -no-color
 
-    - name: Get EC2 public IP
-      id: tf-output
-      working-directory: ./infra/setup
-      run: echo "::set-output name=ec2_ip::$(terraform output -raw ec2_public_ip)"
-
     - name: Terraform Apply
       # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
+
+    - name: Get EC2 public IP
+      id: tf-output
+      run: echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
 
   deploy:
     needs: terraform
@@ -82,7 +81,9 @@ jobs:
 
       - name: Deploy API to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ steps.tf-output.outputs.ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << 'EOF'
+            # Update the server
+            sudo yum update -y || sudo apt-get update -y
      
           # Update the server
           sudo yum update -y || sudo apt-get update -y
@@ -100,5 +101,5 @@ jobs:
             if ! command -v pm2 > /dev/null; then
               sudo npm install -g pm2
             fi
-            pm2 restart all || pm2 start index.js --name "myapp"
+            pm2 restart all || pm2 start src/app.js --name "myapp"
           EOF
