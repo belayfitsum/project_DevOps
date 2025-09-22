@@ -77,6 +77,6 @@ jobs:
 
       - name: Deploy API to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }}
             # Ensure updates and deps
-            sudo yum update -y || sudo apt-get update -y
+            sudo yum update -y || sudo apt-get update -y; cd /home/ubuntu/myapp; git pull; npm install; pm2 restart all"
