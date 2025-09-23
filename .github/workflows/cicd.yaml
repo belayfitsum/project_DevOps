@@ -69,7 +69,7 @@ jobs:
             echo "ec2_ip=$(terraform output -raw ec2_public_ip)"
             echo "rds_endpoint=$(terraform output -raw rds_endpoint)"
             echo "rds_db_name=$(terraform output -raw rds_db_name)"
-          } >> $GITHUB_OUTPUTT
+          } >> $GITHUB_OUTPUT
       
     outputs: 
       ec2_ip: ${{ steps.tf-output.outputs.ec2_ip }}
