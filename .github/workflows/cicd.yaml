@@ -12,7 +12,6 @@ permissions:
   pull-requests: write # This is required for gh bot to comment PR
 
 env:
-  TF_LOG: INFO
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ROLE: ${{ secrets.AWS_ROLE }}
   AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
@@ -59,14 +58,22 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -no-color
 
-    - name: Get EC2 public IP
-      id: tf-output
-      working-directory: ./infra/setup
-      run: echo "::set-output name=ec2_ip::$(terraform output -raw ec2_public_ip)"
-
     - name: Terraform Apply
       # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve -input=false
+
+    - name: Get EC2 public IP
+      id: tf-output
+      run: |
+        terraform output -json > tf_outputs.json
+        echo "ec2_ip=$(jq -r .ec2_public_ip.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_endpoint=$(jq -r .rds_endpoint.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_db_name=$(jq -r .rds_db_name.value tf_outputs.json)" >> $GITHUB_OUTPUT
+      
+    outputs: 
+      ec2_ip: ${{ steps.tf-output.outputs.ec2_ip }}
+      rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
+      rds_db_name: ${{ steps.tf-output.outputs.rds_db_name }}
 
   deploy:
     needs: terraform
@@ -74,6 +81,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+      - name: Debug EC2 IP
+        run: |
+          echo "Terraform EC2 IP: ${{ needs.terraform.outputs.ec2_ip }}"
+          echo "Terraform RDS endpoint: ${{ needs.terraform.outputs.rds_endpoint }}"
+          echo "Terraform DB name: ${{ needs.terraform.outputs.rds_db_name }}"
 
       - name: Install SSH Key
         uses: webfactory/ssh-agent@v0.9.0
@@ -82,16 +94,27 @@ jobs:
 
       - name: Deploy API to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ steps.tf-output.outputs.ec2_ip }} << EOF
-     
-          # Update the server
-          sudo yum update -y || sudo apt-get update -y
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << EOF
+            # Update the server
+            sudo yum update -y || sudo apt-get update -y
 
-          # Pull latest code if using Git, optional if using pipeline artifact
-            git init
-            git remote add origin https://github.com/belayfitsum/project_DevOps.git
-            git fetch
-            git reset --hard origin/main
+          # clone or update repo
+            if [ ! -d "/home/ubuntu/myapp" ]; then
+              git clone -b main https://github.com/belayfitsum/project_DevOps.git /home/ubuntu/myapp
+            else
+              cd /home/ubuntu/myapp && git fetch && git reset --hard origin/main
+            fi
+
+            cd /home/ubuntu/myapp
+
+            # Write .env file with Terraform + Secrets
+            cat <<EOT > .env
+            DB_HOST=${{ needs.terraform.outputs.rds_endpoint }}
+            DB_PORT=5432
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ needs.terraform.outputs.rds_db_name }}
+            EOT
 
           # Install Node.js dependencies
             npm install
@@ -100,5 +123,5 @@ jobs:
             if ! command -v pm2 > /dev/null; then
               sudo npm install -g pm2
             fi
-            pm2 restart all || pm2 start index.js --name "myapp"
+            pm2 restart all || pm2 start src/app.js --name "myapp"
           EOF
