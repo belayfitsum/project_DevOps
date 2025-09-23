@@ -65,13 +65,10 @@ jobs:
     - name: Get EC2 public IP
       id: tf-output
       run: |
-          EC2_IP=$(terraform output -raw ec2_public_ip)
-          RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
-          RDS_DB_NAME=$(terraform output -raw rds_db_name)
-          
-          echo "ec2_ip=$EC2_IP" >> $GITHUB_OUTPUT
-          echo "rds_endpoint=$RDS_ENDPOINT" >> $GITHUB_OUTPUT
-          echo "rds_db_name=$RDS_DB_NAME" >> $GITHUB_OUTPUT
+        terraform output -json > tf_outputs.json
+        echo "ec2_ip=$(jq -r .ec2_public_ip.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_endpoint=$(jq -r .rds_endpoint.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_db_name=$(jq -r .rds_db_name.value tf_outputs.json)" >> $GITHUB_OUTPUT
       
     outputs: 
       ec2_ip: ${{ steps.tf-output.outputs.ec2_ip }}
