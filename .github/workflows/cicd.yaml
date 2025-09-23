@@ -68,6 +68,9 @@ jobs:
       working-directory: ./infra/setup
       run: |
         echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+        echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+        echo "rds_db_name=$(terraform output -raw rds_db_name)" >> $GITHUB_OUTPUT
+
 
   deploy:
     needs: terraform
@@ -86,15 +89,24 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << 'EOF'
             # Update the server
             sudo yum update -y || sudo apt-get update -y
-     
-          # Update the server
-          sudo yum update -y || sudo apt-get update -y
 
-          # Pull latest code if using Git, optional if using pipeline artifact
-            git init
-            git remote add origin https://github.com/belayfitsum/project_DevOps.git
-            git fetch
-            git reset --hard origin/main
+          # clone or update repo
+            if [ ! -d "/home/ubuntu/myapp" ]; then
+              git clone -b main https://github.com/belayfitsum/project_DevOps.git /home/ubuntu/myapp
+            else
+              cd /home/ubuntu/myapp && git fetch && git reset --hard origin/main
+            fi
+
+            cd /home/ubuntu/myapp
+
+            # Write .env file with Terraform + Secrets
+            cat <<EOT > .env
+            DB_HOST=${{ needs.terraform.outputs.rds_endpoint }}
+            DB_PORT=5432
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ needs.terraform.outputs.rds_db_name }}
+            EOT
 
           # Install Node.js dependencies
             npm install

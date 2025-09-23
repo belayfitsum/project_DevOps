@@ -57,6 +57,24 @@ nodemon db/ node db.api
 
 Installed rest client extension from visual studio code for testing API's within the code instead of Postman.
 
+### to insert data POST
+
+curl -X POST http://localhost:3000/postData \
+-H "Content-Type: application/json" \
+-d '{"name":"Alice","email":"alice@example.com"}'
+
+### GET data
+
+http://localhost:3000/logs
+
+Notes: DB_HOST file need to be adjusted to localhost, when testing locally.
+It shoud be changed to host.internal.docker when running inside a docker container 
+
+http://localhost:3000/logs
+
+
+
+
 # Nodemon 
 Nodemon is a development tool that automatically restarts a Node.js application when file changes in the directory are detected. It helps developers by eliminating the need to manually restart the server after making code changes.
 
