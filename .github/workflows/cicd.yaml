@@ -48,7 +48,6 @@ jobs:
 
     - name: Terraform Init
       env:
-        TF_LOG: ERROR
         AWS_BUCKET_NAME: ${{ env.AWS_BUCKET_NAME }}
         AWS_BUCKET_KEY_NAME: ${{ env.AWS_BUCKET_KEY_NAME }}
       run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
@@ -67,11 +66,10 @@ jobs:
       id: tf-output
       working-directory: ./infra/setup
       run: |
-        unset TF_LOG
-        echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
-        echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
-        echo "rds_db_name=$(terraform output -raw rds_db_name)" >> $GITHUB_OUTPUT
-
+        terraform output -json > tf_outputs.json
+        echo "ec2_ip=$(jq -r .ec2_public_ip.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_endpoint=$(jq -r .rds_endpoint.value tf_outputs.json)" >> $GITHUB_OUTPUT
+        echo "rds_db_name=$(jq -r .rds_db_name.value tf_outputs.json)" >> $GITHUB_OUTPUT
 
   deploy:
     needs: terraform
