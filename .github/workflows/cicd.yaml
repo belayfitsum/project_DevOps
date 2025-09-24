@@ -101,7 +101,7 @@ jobs:
 
             # Write .env file with Terraform + Secrets
             cat <<EOT > .env
-            DB_HOST=${{ secretes.rds_endpoint }}
+            DB_HOST=${{ secrets.rds_endpoint }}
             DB_PORT=5432
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
