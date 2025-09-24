@@ -69,8 +69,10 @@ jobs:
       if: steps.plan.outcome == 'failure'
       run: terraform apply -auto-approve tfplan
 
-    - name: Get EC2 public IP
+    - name: Get Terraform Outputs
       id: tf-output
+        # This step will run ONLY if the apply step succeeded or was skipped
+      if: success()
       run: |
         # Get the JSON output from Terraform
         json_output=$(terraform output -json)
