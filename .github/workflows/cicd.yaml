@@ -66,6 +66,12 @@ jobs:
 
     - name: Terraform Apply
       run: terraform apply -auto-approve -input=false
+    - id: tf-output
+      run: |
+        # Extract EC2 IP safely
+        json=$(terraform output -json | tail -n +2)
+        ec2_ip=$(echo "$json" | jq -r '.ec2_public_ip.value')
+        echo "ec2_ip=$ec2_ip" >> $GITHUB_OUTPUT
 
   deploy:
     needs: terraform
@@ -87,6 +93,7 @@ jobs:
       - name: Deploy API to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << EOF
+            echo "Connected to EC2!"
             # Update the server
             sudo yum update -y || sudo apt-get update -y
 
