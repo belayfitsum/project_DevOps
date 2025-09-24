@@ -20,6 +20,11 @@ env:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    outputs:
+      ec2_ip: ${{ steps.tf-output.outputs.ec2_ip }}
+      rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
+      rds_db_name: ${{ steps.tf-output.outputs.rds_db_name }}
+
     defaults:
       run:
         working-directory: ./infra/setup
