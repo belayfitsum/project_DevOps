@@ -68,9 +68,7 @@ jobs:
       run: terraform apply -auto-approve -input=false
     - id: tf-output
       run: |
-        # Extract EC2 IP safely
-        json=$(terraform output -json | tail -n +2)
-        ec2_ip=$(echo "$json" | jq -r '.ec2_public_ip.value')
+        ec2_ip=$(terraform output -json | jq -r '.ec2_public_ip.value')
         echo "ec2_ip=$ec2_ip" >> $GITHUB_OUTPUT
 
   deploy:
