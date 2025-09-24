@@ -66,8 +66,8 @@ jobs:
       continue-on-error: true
 
     - name: Terraform Apply
-      # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve -input=false
+      if: steps.plan.outcome == 'failure'
+      run: terraform apply -auto-approve tfplan
 
     - name: Get EC2 public IP
       id: tf-output
