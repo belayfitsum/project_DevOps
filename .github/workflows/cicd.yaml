@@ -61,36 +61,11 @@ jobs:
       run: terraform validate
 
     - name: Terraform Plan
-      id: plan
-      run: terraform plan -detailed-exitcode -out=tfplan
+      run: terraform plan 
       continue-on-error: true
 
     - name: Terraform Apply
-      if: steps.plan.outcome == 'failure'
-      run: terraform apply -auto-approve tfplan
-
-    - name: Get Terraform Outputs
-      id: tf-output
-        # This step will run ONLY if the apply step succeeded or was skipped
-      if: success()
-      run: |
-        # Get the JSON output from Terraform
-        json_output=$(terraform output -json)
-
-        # Use jq to safely extract values, handling potential nulls
-        ec2_ip=$(echo "$json_output" | jq -r '.ec2_public_ip.value // "null"')
-        rds_endpoint=$(echo "$json_output" | jq -r '.rds_endpoint.value // "null"')
-        rds_db_name=$(echo "$json_output" | jq -r '.rds_db_name.value // "null"')
-
-        if [ "$ec2_ip" = "null" ] || [ "$rds_endpoint" = "null" ] || [ "$rds_db_name" = "null" ]; then
-          echo "Error: One or more Terraform outputs are missing. Check the Terraform Apply step for errors."
-          exit 1
-        fi
-
-        # Set GitHub Actions outputs
-        echo "ec2_ip=$ec2_ip" >> $GITHUB_OUTPUT
-        echo "rds_endpoint=$rds_endpoint" >> $GITHUB_OUTPUT
-        echo "rds_db_name=$rds_db_name" >> $GITHUB_OUTPUT
+      run: terraform apply -auto-approve -input=false
 
   deploy:
     needs: terraform
@@ -126,11 +101,11 @@ jobs:
 
             # Write .env file with Terraform + Secrets
             cat <<EOT > .env
-            DB_HOST=${{ needs.terraform.outputs.rds_endpoint }}
+            DB_HOST=${{ secretes.rds_endpoint }}
             DB_PORT=5432
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ needs.terraform.outputs.rds_db_name }}
+            DB_NAME=${{ secrets.rds_db_name }}
             EOT
 
           # Install Node.js dependencies
