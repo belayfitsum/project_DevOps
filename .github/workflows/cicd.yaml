@@ -61,7 +61,9 @@ jobs:
       run: terraform validate
 
     - name: Terraform Plan
-      run: terraform plan -no-color
+      id: plan
+      run: terraform plan -detailed-exitcode -out=tfplan
+      continue-on-error: true
 
     - name: Terraform Apply
       # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
