@@ -89,7 +89,7 @@ jobs:
           
           # Ensure repo exists
           if [ ! -d ~/project_DevOps ]; then
-            git clone -b main https://github.com/belayfitsum/project_DevOps.git ~/project_DevOps
+            git clone -b main git@github.com:belayfitsum/project_DevOps.git ~/project_DevOps
           fi
 
           cd ~/project_DevOps
