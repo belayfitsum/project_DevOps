@@ -77,7 +77,7 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Deploy to EC2
+    - name: SSH into ec2 with keys from Github
       env:
         PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         HOST: ${{ secrets.AWS_EC2_HOST }}
@@ -86,21 +86,24 @@ jobs:
         echo "$PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
         ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << EOF
-          
-          # Ensure repo exists
-          if [ ! -d ~/project_DevOps ]; then
-            git clone -b main git@github.com:belayfitsum/project_DevOps.git ~/project_DevOps
-          fi
 
-          cd ~/project_DevOps
-          cat <<EOT > .env
-          DB_HOST=${{ secrets.rds_endpoint }}
-          DB_PORT=5432
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.rds_db_name }}
-          EOT
-        # pull changes
+    - name:  Ensure repo exists    
+        
+        if [ ! -d ~/project_DevOps ]; then
+          git clone -b main git@github.com:belayfitsum/project_DevOps.git ~/project_DevOps
+        fi
+
+        cd ~/project_DevOps
+    - name : poplulate env variables
+
+        cat <<EOT > .env
+        DB_HOST=${{ secrets.rds_endpoint }}
+        DB_PORT=5432
+        DB_USER=${{ secrets.DB_USER }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        DB_NAME=${{ secrets.rds_db_name }}
+        EOT
+    - name : pull changes 
         git fetch origin main 
         git reset --hard origin/main
         npm install 
