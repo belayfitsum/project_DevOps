@@ -88,7 +88,7 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << 'EOF'
           
           # Ensure repo exists
-          if [ ! -d "~/project_DevOps" ]; then
+          if [ ! -d ~/project_DevOps ]; then
             git clone -b main https://github.com/belayfitsum/project_DevOps.git ~/project_DevOps
           fi
 
