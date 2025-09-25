@@ -90,12 +90,12 @@ jobs:
           # Ensure repo exists
         cd ~/project_DevOps
         cat <<EOT > .env
-DB_HOST=${{ secrets.rds_endpoint }}
-DB_PORT=5432
-DB_USER=${{ secrets.DB_USER }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-DB_NAME=${{ secrets.rds_db_name }}
-EOT
+        DB_HOST=${{ secrets.rds_endpoint }}
+        DB_PORT=5432
+        DB_USER=${{ secrets.DB_USER }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        DB_NAME=${{ secrets.rds_db_name }}
+        EOT
         # pull changes
         git fetch origin main 
         git reset --hard origin/main
