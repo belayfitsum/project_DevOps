@@ -66,59 +66,100 @@ jobs:
 
     - name: Terraform Apply
       run: terraform apply -auto-approve -input=false
-    - id: tf-output
-      run: |
-        ec2_ip=$(terraform output -json | jq -r '.ec2_public_ip.value')
-        echo "ec2_ip=$ec2_ip" >> $GITHUB_OUTPUT
 
   deploy:
-    needs: terraform
     runs-on: ubuntu-latest
+    needs: terraform  # Runs only after Terraform job succeeds
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Debug EC2 IP
-        run: |
-          echo "Terraform EC2 IP: ${{ needs.terraform.outputs.ec2_ip }}"
-          echo "Terraform RDS endpoint: ${{ needs.terraform.outputs.rds_endpoint }}"
-          echo "Terraform DB name: ${{ needs.terraform.outputs.rds_db_name }}"
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Install SSH Key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+    - name: Install Dependencies
+      run: npm install
 
-      - name: Deploy API to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << EOF
-            echo "Connected to EC2!"
-            # Update the server
-            sudo yum update -y || sudo apt-get update -y
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        HOST: ${{ secrets.AWS_EC2_HOST }}
+        USER: ec2-user
+      run: |
+        echo "$PRIVATE_KEY" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << 'EOF'
+          
+          # Ensure repo exists
+          if [ ! -d "~/project_DevOps" ]; then
+            git clone -b main https://github.com/belayfitsum/project_DevOps.git ~/project_DevOps
+          fi
 
-          # clone or update repo
-            if [ ! -d "/home/ubuntu/myapp" ]; then
-              git clone -b main https://github.com/belayfitsum/project_DevOps.git /home/ubuntu/myapp
-            else
-              cd /home/ubuntu/myapp && git fetch && git reset --hard origin/main
-            fi
+          cd ~/project_DevOps
 
-            cd /home/ubuntu/myapp
+          cat <<EOT > .env
+          DB_HOST=${{ secrets.rds_endpoint }}
+          DB_PORT=5432
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.rds_db_name }}
+          EOT
+        # pull changes
+          git fetch origin main 
+          git reset --hard origin/main
+          git pull origin main
+          npm install 
+          if ! command -v pm2 >/dev/null 2>&1; then
+            sudo npm install -g pm2
+          fi
+          pm2 restart all || pm2 start src/app.js --name "myapp"
+        EOF
 
-            # Write .env file with Terraform + Secrets
-            cat <<EOT > .env
-            DB_HOST=${{ secrets.rds_endpoint }}
-            DB_PORT=5432
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.rds_db_name }}
-            EOT
+  # deploy:
+  #   needs: terraform
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v3
+  #     - name: Debug EC2 IP
+  #       run: |
+  #         echo "Terraform EC2 IP: ${{ needs.terraform.outputs.ec2_ip }}"
+  #         echo "Terraform RDS endpoint: ${{ needs.terraform.outputs.rds_endpoint }}"
+  #         echo "Terraform DB name: ${{ needs.terraform.outputs.rds_db_name }}"
 
-          # Install Node.js dependencies
-            npm install
+  #     - name: Install SSH Key
+  #       uses: webfactory/ssh-agent@v0.9.0
+  #       with:
+  #         ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-          # Restart app with PM2 (install pm2 if not installed)
-            if ! command -v pm2 > /dev/null; then
-              sudo npm install -g pm2
-            fi
-            pm2 restart all || pm2 start src/app.js --name "myapp"
-          EOF
+  #     - name: Deploy API to EC2
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no ubuntu@${{ needs.terraform.outputs.ec2_ip }} << EOF
+  #           echo "Connected to EC2!"
+  #           # Update the server
+  #           sudo yum update -y || sudo apt-get update -y
+
+  #         # clone or update repo
+  #           if [ ! -d "/home/ubuntu/myapp" ]; then
+  #             git clone -b main https://github.com/belayfitsum/project_DevOps.git /home/ubuntu/myapp
+  #           else
+  #             cd /home/ubuntu/myapp && git fetch && git reset --hard origin/main
+  #           fi
+
+  #           cd /home/ubuntu/myapp
+
+  #           # Write .env file with Terraform + Secrets
+  #           cat <<EOT > .env
+  #           DB_HOST=${{ secrets.rds_endpoint }}
+  #           DB_PORT=5432
+  #           DB_USER=${{ secrets.DB_USER }}
+  #           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+  #           DB_NAME=${{ secrets.rds_db_name }}
+  #           EOT
+
+  #         # Install Node.js dependencies
+  #           npm install
+
+  #         # Restart app with PM2 (install pm2 if not installed)
+  #           if ! command -v pm2 > /dev/null; then
+  #             sudo npm install -g pm2
+  #           fi
+  #           pm2 restart all || pm2 start src/app.js --name "myapp"
+  #         EOF
