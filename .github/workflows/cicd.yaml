@@ -85,7 +85,7 @@ jobs:
       run: |
         echo "$PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << EOF
           
           # Ensure repo exists
           if [ ! -d ~/project_DevOps ]; then
@@ -93,7 +93,6 @@ jobs:
           fi
 
           cd ~/project_DevOps
-
           cat <<EOT > .env
           DB_HOST=${{ secrets.rds_endpoint }}
           DB_PORT=5432
@@ -102,14 +101,13 @@ jobs:
           DB_NAME=${{ secrets.rds_db_name }}
           EOT
         # pull changes
-          git fetch origin main 
-          git reset --hard origin/main
-          git pull origin main
-          npm install 
-          if ! command -v pm2 >/dev/null 2>&1; then
-            sudo npm install -g pm2
-          fi
-          pm2 restart all || pm2 start app.js --name "myapp"
+        git fetch origin main 
+        git reset --hard origin/main
+        npm install 
+        if ! command -v pm2 >/dev/null 2>&1; then
+          sudo npm install -g pm2
+        fi
+        pm2 restart all || pm2 start app.js --name "myapp" --update-env
         EOF
 
   # deploy:
