@@ -11,39 +11,41 @@ It also includes a **CI/CD pipeline** with GitHub Actions and **infrastructure a
 - Secure connection via OIDC + IAM roles
 - **PM2** (process manager to keep API running)
 
-docker build -t dockerusername/project . # to build the app
-docker run -p 3000:3000 IMAGE_ID # to containerize it
-
 #### Important Commands
 
-1. docker build -t dockerusername/project . - for internal testing
+1. Build Docker image for  internal testing
+   docker build -t dockerusername/project .
 
-2. docker run -p 3000:3000 IMAGE_ID - to containerize 
+2.  To containerize the image
 
-3. Start / restart postgres - MacOs
- **brew services start postgresql** 
+    docker run -p 3000:3000 IMAGE_ID
 
+3. Start / restart postgres - MacOs 
+
+    brew services start postgresql
+ 
 4. verify psql listening on port 5432
 
-**lsof -i :5432**
+    lsof -i :5432
 
 3. Connect to via psql (CLI)- local or inside EC2 instance
-**psql -U postgres -h localhost -p 5432**
+
+    psql -U postgres -h localhost -p 5432
 
 If it does not work edit <usr/local/var/postgres/postgresql.conf > and uncomment below entry and put a star
 
 **listen_addresses = '*'**
 
-After connecting, check available databases using:
-\l
+After connecting, check available databases using **\l**
 or in PGAdmin navigate to servers > PostGresSQL >Database
 
-4. Create database :
+4. Create database
+
   CREATE DATABASE mydatabase;\
 
 5. Connect to database:
 
-    **\c mydatabase**
+  \c mydatabase
 
 6. Test connectivity from EC2
 
