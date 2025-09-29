@@ -1,6 +1,4 @@
 
-# create a default vpc if not exists
-
 data "aws_availability_zones" "aws_availability_zones" {}
 
 resource "aws_vpc" "my_vpc" {
@@ -8,7 +6,7 @@ resource "aws_vpc" "my_vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "rds_vpc"
+    Name = "DevOps_project_vpc"
   }
 }
 
@@ -78,7 +76,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # 2be changed later
+    cidr_blocks = ["0.0.0.0/0"] # better to  lock it own public IP
   }
   ingress {
     from_port   = 3000
