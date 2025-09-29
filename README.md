@@ -1,24 +1,24 @@
 # Project Overview
 
 This project builds a Node.js + Express API with a PostgreSQL database (RDS) to record user data.  
-It also includes a **CI/CD pipeline** with GitHub Actions and **infrastructure as code** using Terraform on AWS.
+It also includes a **CI/CD pipeline** with GitHub Actions and **infrastructure as code** (IaC) using Terraform on AWS.
 
 ## Features
 
 - REST API with CRUD support (POST, GET)
 - Automated provisioning of AWS infrastructure (EC2 + RDS)
 - Continuous deployment with GitHub Actions
-- Secure connection via OIDC + IAM roles
+- Secure connection via OIDC- OpenID Connect
 - **PM2** (process manager to keep API running)
 
 #### Important Commands
 
 1. Build Docker image for  internal testing
-   docker build -t dockerusername/project .
+   docker build -t  dockerusername/project .
 
-2.  To containerize the image
+2.  To containerize the image [pass --env file to use at runtime]
 
-    docker run -p 3000:3000 IMAGE_ID
+    docker run -p  3000:3000 --env-file .env IMAGE_ID
 
 3. Start / restart postgres - MacOs 
 
@@ -28,7 +28,7 @@ It also includes a **CI/CD pipeline** with GitHub Actions and **infrastructure a
 
     lsof -i :5432
 
-3. Connect to via psql (CLI)- local or inside EC2 instance
+3. Connect to via psql (CLI)- local
 
     psql -U postgres -h localhost -p 5432
 
@@ -50,18 +50,19 @@ or in PGAdmin navigate to servers > PostGresSQL >Database
 6. Test connectivity from EC2
 
     **psql -h rds_endpoint -U postgres -d log -p 5432**
+    ***NOTE*** above works only when master password of rds instance is same as used in .env 
 
 # Deployment to AWS
 
 1. Provision Infrastructure
 
-- terraform apply creates EC2 + RDS in the same VPC.
+- EC2 + RDS creation in the same VPC.  
 
 - RDS runs in a private subnet, EC2 has access.
 
 2. CI/CD Pipeline
 
-- On git push main, GitHub Actions:
+- On git push main and pull request, GitHub Actions:
 
   - Runs Terraform
 
@@ -77,11 +78,14 @@ or in PGAdmin navigate to servers > PostGresSQL >Database
 
 ### Test  the API
 
-  1. Local
+  1. Local - from terminal- Using the POST API to insert data 
 
     curl -X POST http://localhost:3000/postData \
     -H "Content-Type: application/json" \
     -d '{"name":"dani","email":"dani@example.com"}'
+
+    curl -X GET http://localhost:3000/logs
+    [{"id":1,"name":"Alice","email":"alice@example.com"},{"id":2,"name":"dmana","email":"daka@example.com"}]
 
   2. Ec2
 
@@ -94,9 +98,13 @@ or in PGAdmin navigate to servers > PostGresSQL >Database
     http://localhost:3000/logs
     http://PUBLIC_IP:3000/logs
 
+***Note*** Alternative solution for API testing is Postman. Easy and interactive.
+
 # Important Notes
 
-- Add EC2 SSH public key into GitHub → enables repo cloning via Actions.(after ec2 is provisioned, SSH and generate a key)
+- Add EC2 SSH public key into GitHub(SSH and GPG keys part) → enables repo cloning via Actions.
+  - (after ec2 is provisioned, SSH into it  and generate a key)
+  - copy the public key and add it to Github
 - Store Terraform state in S3 for consistency
 - If Github role for OIDC miss permissions during terraform apply, just add enough inline policies.
 - Security group between EC2 and postgres. Postgress must have ingress rule to allow ec2 security group.
