@@ -22,7 +22,7 @@ app.post('/postData', async (req, res) => {
 // GET all log entries
 app.get('/logs', async (req, res) => {
   try {
-    const result = await con.query('SELECT * FROM log_table');
+    const result = await con.query('SELECT * FROM ads');
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -39,7 +39,7 @@ app.delete('/logs', async (req, res) => {
     }
 
     const result = await con.query(
-      'DELETE FROM log_table WHERE name = $1 AND email = $2 RETURNING *',
+      'DELETE FROM ads WHERE name = $1 AND email = $2 RETURNING *',
       [name, email]
     );
 

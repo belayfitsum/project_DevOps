@@ -1,37 +1,37 @@
 - hosts: ec2
   become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
-  # any task name
-  - name: important packages
-    apt:
-      pkg:
-        - curl
-        - vim
-        - git
-        - ufw
-        - npm
-      state: latest
-      update_cache: true
+    - name: Update all packages
+      yum:
+        name: "*"
+        state: latest
 
-  - name: Add NodeSource repository for Node.js 18.x
-    apt:
-      deb: https://deb.nodesource.com/node_18.x/pool/main/n/nodejs/nodejs_18.19.1-deb-1nodesource1_amd64.deb
-    ignore_errors: yes
+    - name: Install essential packages
+      yum:
+        name:
+          - git
+          - vim
+          - unzip
+          - wget
+        state: present
 
-  - name: Install Node.js and npm
-    apt:
-      name: nodejs
-      state: latest
-      update_cache: true
+    - name: Install Node.js 18.x via NodeSource
+      ansible.builtin.shell: |
+        curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+        dnf install -y nodejs
+      args:
+        executable: /bin/bash
 
-  - name: Ensure npm is latest
-    npm:
-      name: npm
-      global: yes
-      state: latest
 
-  - name: Install pm2 globally via npm
-    npm:
-      name: pm2
-      global: yes
+    - name: Ensure npm is latest
+      npm:
+        name: npm
+        global: yes
+        state: latest
 
+    - name: Install pm2 globally via npm
+      npm:
+        name: pm2
+        global: yes
