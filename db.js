@@ -15,7 +15,7 @@ con.connect().then(()=> console.log("connected"))
 
 // Create table if not exists
 con.query(`
-  CREATE TABLE IF NOT EXISTS myappdb (
+  CREATE TABLE IF NOT EXISTS ads (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL

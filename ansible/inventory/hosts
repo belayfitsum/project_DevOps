@@ -1,0 +1,6 @@
+#[ec2]
+172.232.149.133
+
+### from project root run this and delete this file later
+### ansible-playbook -i ansible/hosts ansible/playbooks/ec2.yaml
+
