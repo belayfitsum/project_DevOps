@@ -79,18 +79,18 @@ app.use(express.json());
 
 // POST: Insert new record
 app.post('/postData', (req, res) => {
-  const { name, email } = req.body;
-  if (!name || !email) return res.status(400).send('name and email are required.');
+  const { campaign_name, status } = req.body;
+  if (!campaign_name || !status) return res.status(400).send('campaign_name and status are required.');
 
   db.run(
-    `INSERT INTO ads (name, email) VALUES (?, ?)`,
-    [name, email],
+    `INSERT INTO ads (campaign_name, status) VALUES (?, ?)`,
+    [campaign_name, status],
     function (err) {
       if (err) {
         console.error(err.message);
-        return res.status(500).send('Error inserting into table.');
+        return res.status(500).send('Error inserting into ads table.');
       }
-      res.status(201).json({ id: this.lastID, name, email });
+      res.status(201).json({ id: this.lastID, campaign_name, status });
     }
   );
 });
@@ -106,27 +106,27 @@ app.get('/logs', (req, res) => {
   });
 });
 
-// DELETE: Remove record by name and email
+// DELETE: Remove record by campaign_name and status
 app.delete('/logs', (req, res) => {
-  const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).send("Both name and email are required.");
+  const { campaign_name, status } = req.body;
+  if (!campaign_name || !status) {
+    return res.status(400).send("Both campain_id and adset_id are required.");
   }
 
   db.run(
-    `DELETE FROM ads WHERE name = ? AND email = ?`,
-    [name, email],
+    `DELETE FROM ads WHERE campaign_name = ? AND status = ?`,
+    [campaign_name, status],
     function (err) {
       if (err) {
         console.error(err.message);
-        return res.status(500).send('Error deleting log.');
+        return res.status(500).send('Error deleting campaign.');
       }
 
       if (this.changes === 0) {
-        return res.status(404).send(`No log found with name=${name} and email=${email}`);
+        return res.status(404).send(`No log found with name=${campaign_name} and status=${status}`);
       }
 
-      res.status(200).send(`Log with name=${name} and email=${email} deleted.`);
+      res.status(200).send(`Log with campaign_name=${campaign_name} and status=${status} deleted.`);
     }
   );
 });
