@@ -32,7 +32,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 // Always create DB file in project directory
-const dbPath = path.resolve(__dirname, 'mydb.sqlite3');
+const dbPath = path.resolve('/home/ec2-user/project_DevOps/mydb.sqlite3');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error connecting to SQLite:', err.message);

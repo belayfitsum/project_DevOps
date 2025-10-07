@@ -35,10 +35,15 @@
       npm:
         name: pm2
         global: yes
-        
+
     - name: Install PostgreSQL 15 client (psql) on Amazon Linux 2023
       become: true
       ansible.builtin.dnf:
         name: postgresql15
         state: present
+    - name : install sqlite
+      npm:
+        name: sqlite3
+        global: yes
+
 

@@ -72,7 +72,7 @@
 
 // app.js
 const express = require('express');
-const db = require('./db.sqlite'); // Import DB connection
+const db = require('./db'); // Import DB connection
 const app = express();
 
 app.use(express.json());
