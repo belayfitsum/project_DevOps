@@ -29,14 +29,16 @@
 
 // db.sqlite.js
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-// Open (or create) SQLite database file
-const db = new sqlite3.Database('./mydb.sqlite', (err) => {
+// Always create DB file in project directory
+const dbPath = path.resolve(__dirname, 'mydb.sqlite3');
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error opening database:', err.message);
+    console.error('Error connecting to SQLite:', err.message);
   } else {
-    console.log('Connected to SQLite DB');
-    // Create table if it doesn't exist
+    console.log(`Connected to SQLite database at ${dbPath}`);
+    // Create table if it doesn’t exist
     db.run(`
       CREATE TABLE IF NOT EXISTS ads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
