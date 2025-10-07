@@ -125,21 +125,21 @@ resource "aws_db_subnet_group" "database_subnet_group" {
   }
 }
 
-# create the rds instance
-resource "aws_db_instance" "db_instance" {
-  engine                 = "postgres"
-  engine_version         = "15"
-  identifier             = "postgres-api-testing"
-  username               = var.db_username
-  password               = var.db_password
-  instance_class         = var.db_instance_class
-  allocated_storage      = var.db_storage
-  db_subnet_group_name   = aws_db_subnet_group.database_subnet_group.id
-  vpc_security_group_ids = [aws_security_group.database_sg.id]
-  db_name                = var.db_name
-  skip_final_snapshot    = true
-  multi_az               = true
-}
+# # create the rds instance
+# resource "aws_db_instance" "db_instance" {
+#   engine                 = "postgres"
+#   engine_version         = "15"
+#   identifier             = "postgres-api-testing"
+#   username               = var.db_username
+#   password               = var.db_password
+#   instance_class         = var.db_instance_class
+#   allocated_storage      = var.db_storage
+#   db_subnet_group_name   = aws_db_subnet_group.database_subnet_group.id
+#   vpc_security_group_ids = [aws_security_group.database_sg.id]
+#   db_name                = var.db_name
+#   skip_final_snapshot    = true
+#   multi_az               = true
+# }
 
 # Provision EC2 instance
 resource "aws_instance" "my_api_server" {
