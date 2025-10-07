@@ -1,0 +1,44 @@
+- hosts: ec2
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Update all packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install essential packages
+      yum:
+        name:
+          - git
+          - vim
+          - unzip
+          - wget
+        state: present
+
+    - name: Install Node.js 18.x via NodeSource
+      ansible.builtin.shell: |
+        curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+        dnf install -y nodejs
+      args:
+        executable: /bin/bash
+
+
+    - name: Ensure npm is latest
+      npm:
+        name: npm
+        global: yes
+        state: latest
+
+    - name: Install pm2 globally via npm
+      npm:
+        name: pm2
+        global: yes
+        
+    - name: Install PostgreSQL 15 client (psql) on Amazon Linux 2023
+      become: true
+      ansible.builtin.dnf:
+        name: postgresql15
+        state: present
+
