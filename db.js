@@ -42,8 +42,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
     db.run(`
       CREATE TABLE IF NOT EXISTS ads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        campaign_name INT NOT NULL,
-        status TEXT NOT NULL
+        campaign_name TEXT NOT NULL,
+        status TEXT NOT NULL,
         UNIQUE(campaign_name,status )
       )
     `);
