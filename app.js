@@ -89,6 +89,7 @@ app.post('/postData', (req, res) => {
         console.error(err.message);
         return res.status(500).send('Error inserting into ads table.');
       }
+      res.status(201).json({ id: this.lastID, campaign_name, status });
     }
   );
 });
