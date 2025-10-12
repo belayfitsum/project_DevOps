@@ -74,52 +74,7 @@
 const express = require('express');
 const db = require('./db'); // Import DB connection
 const app = express();
-const axios = require('axios');
-const crypto = require('crypto');
-
 app.use(express.json());
-
-// Meta CAPI config
-const META_PIXEL_ID = '815124168125709';
-const ACCESS_TOKEN = 'EAAQptcpmIxMBPq8J9jZB7Rp01T0ob3y0ZCwf1dhpIFVTV7BqEOwpNIrSoxSu025iMth8tr44SlDP31psBVI1NxyfMsN8houiazG28xhZBhYDuCnsaoXPZB21NfgYU0ZB55TQB9PbgSgcRwKEZBfAJxiilDDLg5j1gBfXpVoLnj9A4jcZBQMT7JI29figoawZCzAjCwZDZD';
-const TEST_EVENT_CODE = 'TEST43678'
-
-// Helper: send event to Meta CAPI
-async function sendEventToMeta(campaign_name, status) {
-  const url = `https://graph.facebook.com/v19.0/${META_PIXEL_ID}/events`;
-
-  const eventData = {
-    data: [
-      {
-        event_name: "Capi_test",
-        event_time: Math.floor(Date.now() / 1000),
-        action_source: "system_generated",
-        custom_data: {
-          campaign_name: campaign_name,
-          status: status
-        },
-      }
-    ]
-  };
-
-  if (TEST_EVENT_CODE) {
-    eventData.test_event_code = TEST_EVENT_CODE;
-  }
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(eventData),
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${ACCESS_TOKEN}` },
-    });
-
-    const result = await response.json();
-    console.log("Meta CAPI response:", result);
-    return result;
-  } catch (err) {
-    console.error("Error sending event to Meta:", err);
-  }
-}
 
 // POST: Insert new record
 app.post('/postData', (req, res) => {
@@ -127,17 +82,13 @@ app.post('/postData', (req, res) => {
   if (!campaign_name || !status) return res.status(400).send('campaign_name and status are required.');
 
   db.run(
-    `INSERT OR IGNORE INTO ads (campaign_name, status) VALUES (?, ?)`,
+    `INSERT INTO ads (campaign_name, status) VALUES (?, ?)`,
     [campaign_name, status],
-    async function (err) {
+    function (err) {
       if (err) {
         console.error(err.message);
         return res.status(500).send('Error inserting into ads table.');
       }
-
-      // Send event to Meta CAPI
-      await sendEventToMeta(campaign_name, status);
-      res.status(201).json({ id: this.lastID, campaign_name, status });
     }
   );
 });
