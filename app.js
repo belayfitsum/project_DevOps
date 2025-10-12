@@ -127,7 +127,7 @@ app.post('/postData', (req, res) => {
   if (!campaign_name || !status) return res.status(400).send('campaign_name and status are required.');
 
   db.run(
-    `INSERT INTO ads (campaign_name, status) VALUES (?, ?)`,
+    `INSERT OR IGNORE INTO ads (campaign_name, status) VALUES (?, ?)`,
     [campaign_name, status],
     async function (err) {
       if (err) {
