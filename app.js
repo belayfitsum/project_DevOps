@@ -77,6 +77,7 @@ const app = express();
 app.use(express.json());
 
 // POST: Insert new record
+// DEMO FOR PRESENTATION
 app.post('/postData', (req, res) => {
   const { campaign_name, status } = req.body;
   if (!campaign_name || !status) return res.status(400).send('campaign_name and status are required.');
